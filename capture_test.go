@@ -25,6 +25,24 @@ func TestCapture_Parse_String(t *testing.T) {
 	assert.Equal(t, "buy milk", myReminder.Message)
 }
 
+func TestCapture_Parse_PointerString(t *testing.T) {
+	type reminder struct {
+		Who     string  `regexpGroup:"who"`
+		Message *string `regexpGroup:"message"`
+	}
+
+	myReminder := &reminder{}
+	err := capture.Parse(
+		`remind (?P<who>\w+) to (?P<message>.*)`,
+		"remind John to buy milk",
+		myReminder,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "John", myReminder.Who)
+	assert.Equal(t, "buy milk", *myReminder.Message)
+}
+
 func TestCapture_Parse_Int(t *testing.T) {
 	type reminder struct {
 		Who     string `regexpGroup:"who"`
@@ -36,7 +54,7 @@ func TestCapture_Parse_Int(t *testing.T) {
 
 	myReminder := &reminder{}
 	err := capture.Parse(
-		`remind (?P<who>\w+) on the (?P<day>\d{1,2})(?:(st|nd|rd|th))? of (?P<month>october|november|december) (?P<year>\d{4}) to (?P<message>.*)`,
+		`remind (?P<who>\w+) on the (?P<day>\d{1,2})(?:(st|nd|rd|th))? of (?P<month>\w+) (?P<year>\d{4}) to (?P<message>.*)`,
 		"remind John on the 31st of october 2030 to buy milk",
 		myReminder,
 	)
@@ -44,6 +62,30 @@ func TestCapture_Parse_Int(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "John", myReminder.Who)
 	assert.Equal(t, 31, myReminder.Day)
+	assert.Equal(t, "october", myReminder.Month)
+	assert.Equal(t, 2030, myReminder.Year)
+	assert.Equal(t, "buy milk", myReminder.Message)
+}
+
+func TestCapture_Parse_PointerInt(t *testing.T) {
+	type reminder struct {
+		Who     string `regexpGroup:"who"`
+		Day     *int   `regexpGroup:"day"`
+		Month   string `regexpGroup:"month"`
+		Year    int    `regexpGroup:"year"`
+		Message string `regexpGroup:"message"`
+	}
+
+	myReminder := &reminder{}
+	err := capture.Parse(
+		`remind (?P<who>\w+) on the (?P<day>\d{1,2})(?:(st|nd|rd|th))? of (?P<month>\w+) (?P<year>\d{4}) to (?P<message>.*)`,
+		"remind John on the 31st of october 2030 to buy milk",
+		myReminder,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "John", myReminder.Who)
+	assert.Equal(t, 31, *myReminder.Day)
 	assert.Equal(t, "october", myReminder.Month)
 	assert.Equal(t, 2030, myReminder.Year)
 	assert.Equal(t, "buy milk", myReminder.Message)
@@ -82,6 +124,24 @@ func TestCapture_Parse_Bool(t *testing.T) {
 	assert.Equal(t, true, myMessage.Value)
 }
 
+func TestCapture_Parse_PointerBool(t *testing.T) {
+	type message struct {
+		Field string `regexpGroup:"field"`
+		Value *bool  `regexpGroup:"value"`
+	}
+
+	myMessage := &message{}
+	err := capture.Parse(
+		`set (?P<field>\w+) to (?P<value>true|false)`,
+		"set A to true",
+		myMessage,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "A", myMessage.Field)
+	assert.Equal(t, true, *myMessage.Value)
+}
+
 func TestCapture_Parse_BoolError(t *testing.T) {
 	type WakeMe struct {
 		Month bool `regexpGroup:"month"`
@@ -115,16 +175,35 @@ func TestCapture_Parse_Float64(t *testing.T) {
 	assert.Equal(t, 3.14, myMessage.Value)
 }
 
-func TestCapture_Parse_Float64Error(t *testing.T) {
-	type WakeMe struct {
-		Month float64 `regexpGroup:"month"`
+func TestCapture_Parse_PointerFloat64(t *testing.T) {
+	type message struct {
+		Field string   `regexpGroup:"field"`
+		Value *float64 `regexpGroup:"value"`
 	}
 
-	myWakeMessage := &WakeMe{}
+	myMessage := &message{}
 	err := capture.Parse(
-		`wake me up when (?P<month>september|october|november|december) ends`,
-		"wake me up when september ends",
-		myWakeMessage,
+		`set (?P<field>\w+) to (?P<value>[+-]?([0-9]*[.])?[0-9]+)`,
+		"set A to 3.14",
+		myMessage,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "A", myMessage.Field)
+	assert.Equal(t, 3.14, *myMessage.Value)
+}
+
+func TestCapture_Parse_Float64Error(t *testing.T) {
+	type message struct {
+		Field string  `regexpGroup:"field"`
+		Value float64 `regexpGroup:"value"`
+	}
+
+	myMessage := &message{}
+	err := capture.Parse(
+		`set (?P<field>\w+) to (?P<value>.*)`,
+		"set A to blue",
+		myMessage,
 	)
 
 	assert.Error(t, err)
