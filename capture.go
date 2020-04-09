@@ -86,13 +86,15 @@ func setValue(valField reflect.Value, value string) error {
 		valField.SetFloat(v)
 
 	case reflect.Ptr:
-		if valField.IsNil() {
-			valField.Set(reflect.New(valField.Type().Elem()))
-		}
+		if value != "" {
+			if valField.IsNil() {
+				valField.Set(reflect.New(valField.Type().Elem()))
+			}
 
-		err := setValue(valField.Elem(), value)
-		if err != nil {
-			return err
+			err := setValue(valField.Elem(), value)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

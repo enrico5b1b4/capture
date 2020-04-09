@@ -43,6 +43,24 @@ func TestCapture_Parse_PointerString(t *testing.T) {
 	assert.Equal(t, "buy milk", *myReminder.Message)
 }
 
+func TestCapture_Parse_NilPointerString(t *testing.T) {
+	type reminder struct {
+		Who     string  `regexpGroup:"who"`
+		Message *string `regexpGroup:"message"`
+	}
+
+	myReminder := &reminder{}
+	err := capture.Parse(
+		`remind (?P<who>\w+) ?(?P<message>.*)?`,
+		"remind John",
+		myReminder,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "John", myReminder.Who)
+	assert.Nil(t, myReminder.Message)
+}
+
 func TestCapture_Parse_Int(t *testing.T) {
 	type reminder struct {
 		Who     string `regexpGroup:"who"`
@@ -89,6 +107,24 @@ func TestCapture_Parse_PointerInt(t *testing.T) {
 	assert.Equal(t, "october", myReminder.Month)
 	assert.Equal(t, 2030, myReminder.Year)
 	assert.Equal(t, "buy milk", myReminder.Message)
+}
+
+func TestCapture_Parse_NilPointerInt(t *testing.T) {
+	type reminder struct {
+		Who string `regexpGroup:"who"`
+		Day *int   `regexpGroup:"day"`
+	}
+
+	myReminder := &reminder{}
+	err := capture.Parse(
+		`remind (?P<who>\w+) ?(?P<day>\d{1,2})? (?P<message>.*)`,
+		"remind John something",
+		myReminder,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "John", myReminder.Who)
+	assert.Nil(t, myReminder.Day)
 }
 
 func TestCapture_Parse_IntError(t *testing.T) {
@@ -142,6 +178,24 @@ func TestCapture_Parse_PointerBool(t *testing.T) {
 	assert.Equal(t, true, *myMessage.Value)
 }
 
+func TestCapture_Parse_NilPointerBool(t *testing.T) {
+	type message struct {
+		Field string `regexpGroup:"field"`
+		Value *bool  `regexpGroup:"value"`
+	}
+
+	myMessage := &message{}
+	err := capture.Parse(
+		`set (?P<field>\w+) ?(?P<value>true|false)?`,
+		"set A",
+		myMessage,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "A", myMessage.Field)
+	assert.Nil(t, myMessage.Value)
+}
+
 func TestCapture_Parse_BoolError(t *testing.T) {
 	type WakeMe struct {
 		Month bool `regexpGroup:"month"`
@@ -191,6 +245,24 @@ func TestCapture_Parse_PointerFloat64(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "A", myMessage.Field)
 	assert.Equal(t, 3.14, *myMessage.Value)
+}
+
+func TestCapture_Parse_NilPointerFloat64(t *testing.T) {
+	type message struct {
+		Field string   `regexpGroup:"field"`
+		Value *float64 `regexpGroup:"value"`
+	}
+
+	myMessage := &message{}
+	err := capture.Parse(
+		`set (?P<field>\w+) ?(?P<value>[+-]?([0-9]*[.])?[0-9]+)?`,
+		"set A",
+		myMessage,
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "A", myMessage.Field)
+	assert.Nil(t, myMessage.Value)
 }
 
 func TestCapture_Parse_Float64Error(t *testing.T) {
