@@ -57,6 +57,10 @@ func Parse(regexpString, text string, d interface{}) error {
 }
 
 func setValue(valField reflect.Value, value string) error {
+	if value == "" {
+		return nil
+	}
+
 	switch valField.Kind() {
 	case reflect.String:
 		valField.SetString(value)
